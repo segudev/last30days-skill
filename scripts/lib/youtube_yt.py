@@ -110,26 +110,12 @@ def is_ytdlp_installed() -> bool:
 def _extract_core_subject(topic: str) -> str:
     """Extract core subject from verbose query for YouTube search.
 
-    Strips meta/research words to keep only the core product/concept name,
-    similar to bird_x.py's approach.
+    NOTE: 'tips', 'tricks', 'tutorial', 'guide', 'review', 'reviews'
+    are intentionally KEPT — they're YouTube content types that improve search.
     """
-    text = topic.lower().strip()
-
-    # Strip multi-word prefixes
-    prefixes = [
-        'what are the best', 'what is the best', 'what are the latest',
-        'what are people saying about', 'what do people think about',
-        'how do i use', 'how to use', 'how to',
-        'what are', 'what is', 'tips for', 'best practices for',
-    ]
-    for p in prefixes:
-        if text.startswith(p + ' '):
-            text = text[len(p):].strip()
-
-    # Strip individual noise words
-    # NOTE: 'tips', 'tricks', 'tutorial', 'guide', 'review', 'reviews'
-    # are intentionally KEPT — they're YouTube content types that improve search
-    noise = {
+    from .query import extract_core_subject
+    # YouTube-specific noise set: smaller than default, keeps content-type words
+    _YT_NOISE = frozenset({
         'best', 'top', 'good', 'great', 'awesome', 'killer',
         'latest', 'new', 'news', 'update', 'updates',
         'trending', 'hottest', 'popular', 'viral',
@@ -137,12 +123,8 @@ def _extract_core_subject(topic: str) -> str:
         'recommendations', 'advice',
         'prompt', 'prompts', 'prompting',
         'methods', 'strategies', 'approaches',
-    }
-    words = text.split()
-    filtered = [w for w in words if w not in noise]
-
-    result = ' '.join(filtered) if filtered else text
-    return result.rstrip('?!.')
+    })
+    return extract_core_subject(topic, noise=_YT_NOISE)
 
 
 def search_youtube(

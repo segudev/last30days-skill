@@ -48,7 +48,9 @@ DEPTH_CONFIG = {
     },
 }
 
-# Stopwords for query extraction
+from .query import extract_core_subject as _query_extract
+
+# Reddit-specific noise words (preserves original smaller set)
 NOISE_WORDS = frozenset({
     'best', 'top', 'good', 'great', 'awesome', 'killer',
     'latest', 'new', 'news', 'update', 'updates',
@@ -82,24 +84,7 @@ def _extract_core_subject(topic: str) -> str:
 
     Strips meta/research words to keep only the core product/concept name.
     """
-    text = topic.lower().strip()
-
-    # Strip multi-word prefixes
-    prefixes = [
-        'what are the best', 'what is the best', 'what are the latest',
-        'what are people saying about', 'what do people think about',
-        'how do i use', 'how to use', 'how to',
-        'what are', 'what is', 'tips for', 'best practices for',
-    ]
-    for p in prefixes:
-        if text.startswith(p + ' '):
-            text = text[len(p):].strip()
-
-    words = text.split()
-    filtered = [w for w in words if w not in NOISE_WORDS]
-
-    result = ' '.join(filtered) if filtered else text
-    return result.rstrip('?!.')
+    return _query_extract(topic, noise=NOISE_WORDS)
 
 
 def expand_reddit_queries(topic: str, depth: str) -> List[str]:

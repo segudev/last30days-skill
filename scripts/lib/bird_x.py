@@ -54,56 +54,10 @@ def _extract_core_subject(topic: str) -> str:
 
     X search is literal keyword AND matching — all words must appear.
     Aggressively strip question/meta/research words to keep only the
-    core product/concept name (2-3 words max).
+    core product/concept name (max 5 words).
     """
-    text = topic.lower().strip()
-
-    # Phase 1: Strip multi-word prefixes (longest first)
-    prefixes = [
-        'what are the best', 'what is the best', 'what are the latest',
-        'what are people saying about', 'what do people think about',
-        'how do i use', 'how to use', 'how to',
-        'what are', 'what is', 'tips for', 'best practices for',
-    ]
-    for p in prefixes:
-        if text.startswith(p + ' '):
-            text = text[len(p):].strip()
-            break
-
-    # Phase 2: Strip multi-word suffixes
-    suffixes = [
-        'best practices', 'use cases', 'prompt techniques',
-        'prompting techniques', 'prompting tips',
-    ]
-    for s in suffixes:
-        if text.endswith(' ' + s):
-            text = text[:-len(s)].strip()
-            break
-
-    # Phase 3: Filter individual noise words
-    _noise = {
-        # Question/filler words
-        'a', 'an', 'the', 'is', 'are', 'was', 'were', 'and', 'or',
-        'of', 'in', 'on', 'for', 'with', 'about', 'to',
-        'people', 'saying', 'think', 'said', 'lately',
-        # Research/meta descriptors
-        'best', 'top', 'good', 'great', 'awesome', 'killer',
-        'latest', 'new', 'news', 'update', 'updates',
-        'trendiest', 'trending', 'hottest', 'hot', 'popular', 'viral',
-        'practices', 'features', 'guide', 'tutorial',
-        'recommendations', 'advice', 'review', 'reviews',
-        'usecases', 'examples', 'comparison', 'versus', 'vs',
-        'plugin', 'plugins', 'skill', 'skills', 'tool', 'tools',
-        # Prompting meta words
-        'prompt', 'prompts', 'prompting', 'techniques', 'tips',
-        'tricks', 'methods', 'strategies', 'approaches',
-        # Action words
-        'using', 'uses', 'use',
-    }
-    words = text.split()
-    result = [w for w in words if w not in _noise]
-
-    return ' '.join(result[:3]) or topic.lower().strip()  # Max 3 words
+    from .query import NOISE_WORDS, extract_core_subject
+    return extract_core_subject(topic, max_words=5, strip_suffixes=True)
 
 
 def is_bird_installed() -> bool:

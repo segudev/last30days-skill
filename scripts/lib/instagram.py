@@ -99,25 +99,9 @@ def _compute_relevance(query: str, text: str, hashtags: List[str] = None) -> flo
 
 
 def _extract_core_subject(topic: str) -> str:
-    """Extract core subject from verbose query for Instagram search.
-
-    Strips meta/research words to keep only the core product/concept name.
-    """
-    text = topic.lower().strip()
-
-    # Strip multi-word prefixes
-    prefixes = [
-        'what are the best', 'what is the best', 'what are the latest',
-        'what are people saying about', 'what do people think about',
-        'how do i use', 'how to use', 'how to',
-        'what are', 'what is', 'tips for', 'best practices for',
-    ]
-    for p in prefixes:
-        if text.startswith(p + ' '):
-            text = text[len(p):].strip()
-
-    # Strip individual noise words
-    noise = {
+    """Extract core subject from verbose query for Instagram search."""
+    from .query import extract_core_subject
+    _INSTAGRAM_NOISE = frozenset({
         'best', 'top', 'good', 'great', 'awesome', 'killer',
         'latest', 'new', 'news', 'update', 'updates',
         'trending', 'hottest', 'popular', 'viral',
@@ -125,12 +109,8 @@ def _extract_core_subject(topic: str) -> str:
         'recommendations', 'advice',
         'prompt', 'prompts', 'prompting',
         'methods', 'strategies', 'approaches',
-    }
-    words = text.split()
-    filtered = [w for w in words if w not in noise]
-
-    result = ' '.join(filtered) if filtered else text
-    return result.rstrip('?!.')
+    })
+    return extract_core_subject(topic, noise=_INSTAGRAM_NOISE)
 
 
 def _log(msg: str):
