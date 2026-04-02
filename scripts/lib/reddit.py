@@ -22,6 +22,8 @@ try:
 except ImportError:
     _requests = None
 
+from datetime import datetime as _datetime
+
 from . import http
 
 SCRAPECREATORS_BASE = "https://api.scrapecreators.com/v1/reddit"
@@ -47,6 +49,15 @@ DEPTH_CONFIG = {
         "timeframe": "month",
     },
 }
+
+def _days_to_timeframe(days: int) -> str:
+    """Map a day count to Reddit's timeframe parameter."""
+    if days <= 7:
+        return "week"
+    if days <= 30:
+        return "month"
+    return "year"
+
 
 from .query import extract_core_subject as _query_extract
 from .query_type import detect_query_type
@@ -428,7 +439,9 @@ def search_reddit(
         return {"items": [], "error": "No SCRAPECREATORS_API_KEY configured"}
 
     config = DEPTH_CONFIG.get(depth, DEPTH_CONFIG["default"])
-    timeframe = config["timeframe"]
+    # Derive timeframe from actual date span instead of static config
+    _span = (_datetime.strptime(to_date, "%Y-%m-%d") - _datetime.strptime(from_date, "%Y-%m-%d")).days
+    timeframe = _days_to_timeframe(_span)
 
     # === Phase 1: Query Expansion ===
     queries = expand_reddit_queries(topic, depth)

@@ -1459,9 +1459,9 @@ def main():
         "--days",
         type=int,
         default=30,
-        choices=range(1, 31),
+        choices=range(1, 181),
         metavar="N",
-        help="Number of days to look back (1-30, default: 30)",
+        help="Number of days to look back (1-180, default: 30)",
     )
     parser.add_argument(
         "--store",
@@ -1737,7 +1737,7 @@ def main():
     search_run_xiaohongshu = has_xiaohongshu
 
     # INCLUDE_SOURCES override: force specific sources on regardless of tier
-    _include_sources = {s.strip().lower() for s in config.get('INCLUDE_SOURCES', '').split(',') if s.strip()}
+    _include_sources = {s.strip().lower() for s in (config.get('INCLUDE_SOURCES') or '').split(',') if s.strip()}
     if _include_sources:
         if 'tiktok' in _include_sources and has_tiktok:
             if not search_run_tiktok:

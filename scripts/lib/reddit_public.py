@@ -16,6 +16,7 @@ import sys
 import time
 import urllib.error
 import urllib.parse
+from datetime import datetime as _datetime
 import urllib.request
 from typing import Any, Dict, List, Optional
 
@@ -173,6 +174,7 @@ def search(
     depth: str = "default",
     subreddit: Optional[str] = None,
     timeout: int = 15,
+    timeframe: str = "month",
 ) -> List[Dict[str, Any]]:
     """Search Reddit via the public JSON endpoint.
 
@@ -181,6 +183,7 @@ def search(
         depth: 'quick', 'default', or 'deep' — controls result limit
         subreddit: Optional subreddit name (without r/) for scoped search
         timeout: HTTP timeout in seconds
+        timeframe: Reddit time filter (hour, day, week, month, year, all)
 
     Returns:
         List of normalized post dicts. Empty list on any failure.
@@ -192,12 +195,12 @@ def search(
         sub = subreddit.lstrip("r/").strip()
         url = (
             f"https://www.reddit.com/r/{sub}/search.json"
-            f"?q={encoded_query}&restrict_sr=on&sort=relevance&t=month&limit={limit}&raw_json=1"
+            f"?q={encoded_query}&restrict_sr=on&sort=relevance&t={timeframe}&limit={limit}&raw_json=1"
         )
     else:
         url = (
             f"https://www.reddit.com/search.json"
-            f"?q={encoded_query}&sort=relevance&t=month&limit={limit}&raw_json=1"
+            f"?q={encoded_query}&sort=relevance&t={timeframe}&limit={limit}&raw_json=1"
         )
 
     data = _fetch_json(url, timeout=timeout)
@@ -237,7 +240,14 @@ def search_reddit_public(
     Returns:
         List of normalized item dicts matching ScrapeCreators output format.
     """
-    results = search(topic, depth=depth)
+    _span = (_datetime.strptime(to_date, "%Y-%m-%d") - _datetime.strptime(from_date, "%Y-%m-%d")).days
+    if _span <= 7:
+        timeframe = "week"
+    elif _span <= 30:
+        timeframe = "month"
+    else:
+        timeframe = "year"
+    results = search(topic, depth=depth, timeframe=timeframe)
 
     # Date filter: keep posts in range or with unknown dates
     filtered = []
